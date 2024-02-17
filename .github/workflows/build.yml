@@ -1,9 +1,17 @@
 name: Patch and Build
 
 on:
-  push:
-    branches: [ "**" ]
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: false
+        default: 'warning'
+        type: choice
+        options:
+          - info
+          - warning
+          - error
 
 jobs:
   build:
@@ -24,7 +32,31 @@ jobs:
           java-version: '17'
       - name: Configure Git User Details
         run: git config --global user.email "actions@github.com" && git config --global user.name "Github Actions"
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x ./gradlew
       - name: Apply Patches
         run: ./gradlew applyPatches
+      - name: Compress All Files
+        run: tar -cvf project.tar ./*
       - name: Build
         run: ./gradlew build
+      - name: Publish To Maven Local
+        run: ./gradlew publishToMavenLocal
+      - name: Create Mojmap Paperclip Jar
+        run: ./gradlew createMojmapPaperclipJar
+      - name: Capture Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Artifacts
+          path: |
+            build/libs/
+      - name: Automatic Releases
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Folia Artifacts"
+          files: |
+            build/libs/*.*
+            project.tar
