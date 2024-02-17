@@ -42,6 +42,8 @@ jobs:
         run: ./gradlew build
       - name: Publish To Maven Local
         run: ./gradlew publishToMavenLocal
+      - name: Create Reobf Bundler Jar
+        run: ./gradlew createReobfBundlerJar createReobfPaperclipJar
       - name: Create Mojmap Paperclip Jar
         run: ./gradlew createMojmapPaperclipJar
       - name: Capture Build Artifacts
